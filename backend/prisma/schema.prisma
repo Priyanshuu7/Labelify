@@ -14,9 +14,9 @@ datasource db {
 }
 
 model User {
-  id          Int  @id @default(autoincrement())
-  address     String @unique
-  tasks       Task[]
+  id            Int  @id @default(autoincrement())
+  address       String @unique
+  tasks         Task[]
 }
 
 model Task {
@@ -33,14 +33,14 @@ model Option {
    option_id   Int 
    task_id     Int
    task        Task @relation(fields: [task_id],references: [id])
-   submission Submission[]
+   submission  Submission[]
 
 }
 
 model Woker {
-  id         Int  @id @default(autoincrement())
-  address    String @unique
-  submission Submission[]
+  id            Int  @id @default(autoincrement())
+  address       String @unique
+  submission    Submission[]
 }
 
 model  Submission {
