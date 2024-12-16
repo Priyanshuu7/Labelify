@@ -19,12 +19,24 @@ model User {
   tasks         Task[]
 }
 
+model Woker {
+  id                Int  @id @default(autoincrement())
+  address           String @unique
+  submission        Submission[]
+  balance_id        Int
+  pending_amount    Int
+  locked_amount     Int
+}
+
 model Task {
   id            Int @id @default(autoincrement())
-  title         String
+  title         String  @default("Select the best image")
   options       Option[]
   user_id       Int 
+  signature     String
+  amount        String
   user          User @relation(fields: [user_id],references: [id])
+  submissions   Submission[]
 }
 
 model Option {
@@ -33,14 +45,8 @@ model Option {
    option_id    Int 
    task_id      Int
    task         Task @relation(fields: [task_id],references: [id])
-   submission  Submission[]
+   submission   Submission[]
 
-}
-
-model Woker {
-  id            Int  @id @default(autoincrement())
-  address       String @unique
-  submission    Submission[]
 }
 
 model  Submission {
@@ -49,7 +55,8 @@ model  Submission {
   worker         Woker @relation(fields: [worker_id],references: [id])
   option_id      Int
   option         Option @relation(fields: [option_id],references: [id])
-
+  task_id        Int
+  task           Task @relation(fields: [task_id],references: [id])
+  amount         String
 
 }
-
