@@ -19,7 +19,7 @@ model User {
   tasks         Task[]
 }
 
-model Woker {
+model Worker {
   id                Int  @id @default(autoincrement())
   address           String @unique
   submission        Submission[]
@@ -52,7 +52,7 @@ model Option {
 model  Submission {
   id             Int @id @default(autoincrement())
   worker_id      Int
-  worker         Woker @relation(fields: [worker_id],references: [id])
+  worker         Worker @relation(fields: [worker_id],references: [id])
   option_id      Int
   option         Option @relation(fields: [option_id],references: [id])
   task_id        Int
