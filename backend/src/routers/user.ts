@@ -5,20 +5,38 @@ import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { JWT_SECRET } from "..";
 import { authMiddleware } from "../middleware";
+import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 
 const prismaClient = new PrismaClient();
 const router = Router();
 
-const s3Client = new S3Client();
+const s3Client = new S3Client({
+  credentials: {
+    accessKeyId: "AKIASFIXCV457LHHH2UW",
+    secretAccessKey: "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",
+  },
+  region: "eu-north-1",
+});
 router.get("/presignedUrl", authMiddleware, async (req, res) => {
   //@ts-ignore
   const userId = req.userId;
-  const command = new GetObjectCommand({
-    Bucket: "some-bucket",
-    Key: "some-object",
+  const { url, fields } = await createPresignedPost(s3Client, {
+    Bucket: "decentralised-fiverrr",
+    Key: `fiver/${userId}/${Math.random()}/image.jpg`,
+    Conditions: [
+      ["content-length-range", 0, 5 * 1024 * 1024], // 5 MB max
+    ],
+    Fields: {
+      "Content-Type": "image/png",
+    },
+    Expires: 3600,
   });
-  const preSignedUrl = await getSignedUrl(s3Client, command, {
-    expiresIn: 3600,
+
+  // console.log({ url, fields });
+
+  res.json({
+    preSignedUrl: url,
+    fields,
   });
 });
 

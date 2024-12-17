@@ -15,9 +15,38 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const client_s3_1 = require("@aws-sdk/client-s3");
+const __1 = require("..");
+const middleware_1 = require("../middleware");
+const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
 const prismaClient = new client_1.PrismaClient();
 const router = (0, express_1.Router)();
-const JWT_SECRET = "secret";
+const s3Client = new client_s3_1.S3Client({
+    credentials: {
+        accessKeyId: "AKIASFIXCV457LHHH2UW",
+        secretAccessKey: "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",
+    },
+    region: "eu-north-1",
+});
+router.get("/presignedUrl", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    //@ts-ignore
+    const userId = req.userId;
+    const { url, fields } = yield (0, s3_presigned_post_1.createPresignedPost)(s3Client, {
+        Bucket: "decentralised-fiverrr",
+        Key: `fiver/${userId}/${Math.random()}/image.jpg`,
+        Conditions: [
+            ["content-length-range", 0, 5 * 1024 * 1024], // 5 MB max
+        ],
+        Fields: {
+            "Content-Type": "image/png",
+        },
+        Expires: 3600,
+    });
+    console.log({ url, fields });
+    res.json({
+        preSignedUrl: url,
+    });
+}));
 router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const hardcodedWalletAddress = "DZwSAUdxz8goAooy8rBdauQhERToKfGSwGm1PusydS7V";
     const existingUser = yield prismaClient.user.findFirst({
@@ -28,7 +57,7 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
     if (existingUser) {
         const token = jsonwebtoken_1.default.sign({
             userId: existingUser.id,
-        }, JWT_SECRET);
+        }, __1.JWT_SECRET);
         res.json({ token });
     }
     else {
@@ -39,7 +68,7 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
         });
         const token = jsonwebtoken_1.default.sign({
             userId: user.id,
-        }, JWT_SECRET);
+        }, __1.JWT_SECRET);
         res.json({ token });
     }
 }));
