@@ -3,9 +3,12 @@ import userRouter from "./routers/user";
 import workerRouter from "./routers/worker";
 
 const app = express();
+app.use(express.json());
 export const JWT_SECRET = "secret";
 
 app.use("/v1/user", userRouter);
 app.use("/v1/worker", workerRouter);
 
-app.listen(3000);
+app.listen(3000, () => {
+  console.log("Server started on port 3000");
+});

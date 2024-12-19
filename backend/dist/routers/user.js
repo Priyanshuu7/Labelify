@@ -16,9 +16,12 @@ const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const client_s3_1 = require("@aws-sdk/client-s3");
+// import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 const __1 = require("..");
 const middleware_1 = require("../middleware");
 const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
+const types_1 = require("../types");
+const DEFAULT_TITLE = "Select the most clickable thumbnail";
 const prismaClient = new client_1.PrismaClient();
 const router = (0, express_1.Router)();
 const s3Client = new client_s3_1.S3Client({
@@ -28,6 +31,80 @@ const s3Client = new client_s3_1.S3Client({
     },
     region: "eu-north-1",
 });
+router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    //@ts-ignore
+    const taskId = req.query.taskId;
+    //@ts-ignore
+    const userId = req.userId;
+    const taskDetails = yield prismaClient.task.findFirst({
+        where: {
+            user_id: Number(userId),
+            id: Number(taskId),
+        },
+        include: {
+            options: true,
+        },
+    });
+    if (!taskDetails) {
+        res.status(411).json({
+            message: "You dont have acces to this task",
+        });
+        return;
+    }
+    const responses = yield prismaClient.submission.findMany({
+        where: {
+            task_id: Number(taskId),
+        },
+        include: {
+            option: true,
+        },
+    });
+    const result = {};
+    taskDetails.options.forEach((option) => {
+        result[option.id] = {
+            count: 0,
+            option: {
+                imageUrl: option.image_url,
+            },
+        };
+    });
+    responses.forEach((r) => {
+        result[r.option_id].count++;
+    });
+    res.json({
+        result,
+    });
+}));
+router.post("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const userId = req.userId;
+    const body = req.body;
+    const parseData = types_1.createTaskInput.safeParse(body);
+    if (!parseData.success) {
+        res.status(411).json({ message: "Invalid input" });
+        return;
+    }
+    let response = yield prismaClient.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const response = yield tx.task.create({
+            data: {
+                title: parseData.data.title || DEFAULT_TITLE,
+                amount: "1",
+                signature: parseData.data.signature,
+                user_id: userId,
+            },
+        });
+        yield tx.option.createMany({
+            data: parseData.data.options.map((option) => ({
+                image_url: option.imageUrl,
+                task_id: response.id,
+            })),
+        });
+        return response;
+    }));
+    res.json({
+        id: response.id,
+    });
+}));
 router.get("/presignedUrl", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //@ts-ignore
     const userId = req.userId;
@@ -42,9 +119,10 @@ router.get("/presignedUrl", middleware_1.authMiddleware, (req, res) => __awaiter
         },
         Expires: 3600,
     });
-    console.log({ url, fields });
+    // console.log({ url, fields });
     res.json({
         preSignedUrl: url,
+        fields,
     });
 }));
 router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
