@@ -17,7 +17,7 @@ const client_1 = require("@prisma/client");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const client_s3_1 = require("@aws-sdk/client-s3");
 // import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-const __1 = require("..");
+const config_1 = require("../config");
 const middleware_1 = require("../middleware");
 const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
 const types_1 = require("../types");
@@ -135,7 +135,7 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
     if (existingUser) {
         const token = jsonwebtoken_1.default.sign({
             userId: existingUser.id,
-        }, __1.JWT_SECRET);
+        }, config_1.JWT_SECRET);
         res.json({ token });
     }
     else {
@@ -146,7 +146,7 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
         });
         const token = jsonwebtoken_1.default.sign({
             userId: user.id,
-        }, __1.JWT_SECRET);
+        }, config_1.JWT_SECRET);
         res.json({ token });
     }
 }));

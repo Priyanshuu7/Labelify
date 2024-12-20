@@ -1,34 +1,64 @@
+import { Submission } from "./../../node_modules/.prisma/client/index.d";
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "..";
 import { WorkerMiddleware } from "../middleware";
-export const WORKER_JWT_SECRET = JWT_SECRET + "worker";
+import { WORKER_JWT_SECRET } from "../config";
+import { getNextTask } from "../db";
+import { createSubmissionInput } from "../types";
+
+const TOTAL_SUBMISSIONS = 100;
 
 const router = Router();
 const prismaClient = new PrismaClient();
 
-router.get("/nextTask", WorkerMiddleware, async (req,res)=>{
-    //@ts-ignore
-    const userId = req.userId
-    const task = await prismaClient.task.findFirst({
-        where:{
-            
-        }
-    })
+router.post("/submission", WorkerMiddleware, async (req, res) => {
+  //@ts-ignore
+  const userId = req.userId;
+  const body = req.body;
+  const paredBody = createSubmissionInput.safeParse(body);
 
-})
+  if (paredBody.success) {
+    const task = await getNextTask(Number(userId));
+    if (!task || task?.id !== Number(paredBody.data.taskId)) {
+      res.status(411).json({
+        message: "Incorrect task id ",
+      });
+      return;
+    }
+    const amount = (Number(task.amount) / TOTAL_SUBMISSIONS).toString();
+    const submission = await prismaClient.submission.create({
+      data: {
+        option_id: Number(paredBody.data.selection),
+        worker_id: userId,
+        task_id: Number(paredBody.data.taskId),
+        amount,
+      },
+    });
+    const nextTask = await getNextTask(Number(userId));
+    res.json({
+      nextTask,
+      amount,
+    });
+  } else {
+  }
+});
 
+router.get("/nextTask", WorkerMiddleware, async (req, res) => {
+  //@ts-ignore
+  const userId = req.userId;
+  const task = await getNextTask(Number(userId));
 
-
-
-
-
-
-
-
-
-
+  if (!task) {
+    res.status(411).json({
+      message: "No more task is you to review",
+    });
+  } else {
+    res.status(411).json({
+      task,
+    });
+  }
+});
 
 router.post("/signin", async (req, res) => {
   const hardcodedWalletAddress = "DZwSAUdxz8goAooy8rBdauQhERToKfGSwGm1PusydS7V";

@@ -4,7 +4,6 @@ import workerRouter from "./routers/worker";
 
 const app = express();
 app.use(express.json());
-export const JWT_SECRET = "secret";
 
 app.use("/v1/user", userRouter);
 app.use("/v1/worker", workerRouter);
