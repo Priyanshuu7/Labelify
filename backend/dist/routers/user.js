@@ -21,21 +21,29 @@ const config_1 = require("../config");
 const middleware_1 = require("../middleware");
 const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
 const types_1 = require("../types");
+// Default title for tasks if none is provided
 const DEFAULT_TITLE = "Select the most clickable thumbnail";
+// Initialize Prisma Client for database operations
 const prismaClient = new client_1.PrismaClient();
+// Initialize Express Router
 const router = (0, express_1.Router)();
+// Initialize S3 Client for AWS S3 operations
 const s3Client = new client_s3_1.S3Client({
     credentials: {
+        // AWS Access Key ID for S3 client authentication
         accessKeyId: "AKIASFIXCV457LHHH2UW",
+        // AWS Secret Access Key for S3 client authentication
         secretAccessKey: "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",
     },
     region: "eu-north-1",
 });
+// Route to get task details
 router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //@ts-ignore
     const taskId = req.query.taskId;
     //@ts-ignore
     const userId = req.userId;
+    // Fetch task details for the given user and task ID
     const taskDetails = yield prismaClient.task.findFirst({
         where: {
             user_id: Number(userId),
@@ -51,6 +59,7 @@ router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0,
         });
         return;
     }
+    // Fetch all submissions for the task
     const responses = yield prismaClient.submission.findMany({
         where: {
             task_id: Number(taskId),
@@ -59,7 +68,9 @@ router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0,
             option: true,
         },
     });
+    // Prepare result object to count submissions per option
     const result = {};
+    // Initialize result with options
     taskDetails.options.forEach((option) => {
         result[option.id] = {
             count: 0,
@@ -68,13 +79,16 @@ router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0,
             },
         };
     });
+    // Count submissions for each option
     responses.forEach((r) => {
         result[r.option_id].count++;
     });
+    // Send the result as JSON response
     res.json({
         result,
     });
 }));
+// Route to create a new task
 router.post("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // @ts-ignore
     const userId = req.userId;
@@ -84,6 +98,7 @@ router.post("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0
         res.status(411).json({ message: "Invalid input" });
         return;
     }
+    // Create task and options within a transaction
     let response = yield prismaClient.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
         const response = yield tx.task.create({
             data: {
@@ -101,10 +116,12 @@ router.post("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0
         });
         return response;
     }));
+    // Send the created task ID as JSON response
     res.json({
         id: response.id,
     });
 }));
+// Route to get a presigned URL for S3
 router.get("/presignedUrl", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //@ts-ignore
     const userId = req.userId;
@@ -119,26 +136,30 @@ router.get("/presignedUrl", middleware_1.authMiddleware, (req, res) => __awaiter
         },
         Expires: 3600,
     });
-    // console.log({ url, fields });
+    // Send the presigned URL and fields as JSON response
     res.json({
         preSignedUrl: url,
         fields,
     });
 }));
+// Route to sign in a user
 router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const hardcodedWalletAddress = "DZwSAUdxz8goAooy8rBdauQhERToKfGSwGm1PusydS7V";
+    // Check if user already exists
     const existingUser = yield prismaClient.user.findFirst({
         where: {
             address: hardcodedWalletAddress,
         },
     });
     if (existingUser) {
+        // Generate JWT token for existing user
         const token = jsonwebtoken_1.default.sign({
             userId: existingUser.id,
         }, config_1.JWT_SECRET);
         res.json({ token });
     }
     else {
+        // Create new user and generate JWT token
         const user = yield prismaClient.user.create({
             data: {
                 address: hardcodedWalletAddress,

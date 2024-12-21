@@ -27,21 +27,37 @@ router.post("/submission", WorkerMiddleware, async (req, res) => {
     if (!task || task?.id !== Number(paredBody.data.taskId)) {
       // Check if task is valid
       res.status(411).json({
-        message: "Incorrect task id ", // Respond with error if task ID is incorrect
+        message: "You already completed this task", // Respond with error if task ID is incorrect
       });
       return;
     }
     // Calculate the amount for the submission
     const amount = (Number(task.amount) / TOTAL_SUBMISSIONS).toString();
-    // Create a new submission in the database
-    const submission = await prismaClient.submission.create({
-      data: {
-        option_id: Number(paredBody.data.selection),
-        worker_id: userId,
-        task_id: Number(paredBody.data.taskId),
-        amount,
-      },
+
+    const submission = prismaClient.$transaction(async (tx) => {
+      // Create a new submission in the database
+      const submission = await prismaClient.submission.create({
+        data: {
+          option_id: Number(paredBody.data.selection),
+          worker_id: userId,
+          task_id: Number(paredBody.data.taskId),
+          amount,
+        },
+      });
+      await prismaClient.worker.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          pending_amount: {
+            increment: Number(amount),
+          },
+        },
+      });
+
+      return submission;
     });
+
     // Fetch the next task for the user after submission
     const nextTask = await getNextTask(Number(userId));
     // Respond with the next task and the amount for the current submission

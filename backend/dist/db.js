@@ -24,9 +24,9 @@ const getNextTask = (userId) => __awaiter(void 0, void 0, void 0, function* () {
         },
         select: {
             id: true,
+            amount: true,
             title: true,
             options: true,
-            amount: true,
         },
     });
     return task;
