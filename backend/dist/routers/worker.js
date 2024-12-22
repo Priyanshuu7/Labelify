@@ -127,5 +127,6 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.json({ token }); // Respond with the token
     }
 }));
+console.log(config_1.WORKER_JWT_SECRET);
 // Export the router for use in other parts of the application
 exports.default = router;

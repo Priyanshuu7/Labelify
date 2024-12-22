@@ -128,5 +128,7 @@ router.post("/signin", async (req, res) => {
   }
 });
 
+console.log(WORKER_JWT_SECRET);
+
 // Export the router for use in other parts of the application
 export default router;
