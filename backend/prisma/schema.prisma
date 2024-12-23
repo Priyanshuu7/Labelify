@@ -4,59 +4,64 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// Define the Prisma client generator to use the JavaScript client
 generator client {
   provider = "prisma-client-js"
 }
 
+// Define the datasource for the database connection
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "postgresql" // Use PostgreSQL as the database provider
+  url      = env("DATABASE_URL") // Database URL is fetched from environment variables
 }
 
+// Define the User model
 model User {
-  id            Int  @id @default(autoincrement())
-  address       String @unique
-  tasks         Task[]
+  id            Int  @id @default(autoincrement()) // Unique identifier for each user, auto-incremented
+  address       String @unique // Unique address for each user
+  tasks         Task[] // One-to-many relationship with Task model
 }
 
+// Define the Worker model
 model Worker {
-  id                Int  @id @default(autoincrement())
-  address           String @unique
-  submission        Submission[]
-  pending_amount    Int
-  locked_amount     Int
+  id                Int  @id @default(autoincrement()) // Unique identifier for each worker, auto-incremented
+  address           String @unique // Unique address for each worker
+  submission        Submission[] // One-to-many relationship with Submission model
+  pending_amount    Int // Amount pending for the worker
+  locked_amount     Int // Amount locked for the worker
 }
 
+// Define the Task model
 model Task {
-  id            Int @id @default(autoincrement())
-  title         String  @default("Select the best image")
-  options       Option[]
-  user_id       Int 
-  signature     String
-  amount        String
-  done          Boolean @default(false)
-  user          User @relation(fields: [user_id],references: [id])
-  submissions   Submission[]
+  id            Int @id @default(autoincrement()) // Unique identifier for each task, auto-incremented
+  title         String  @default("Select the best image") // Default title for the task
+  options       Option[] // One-to-many relationship with Option model
+  user_id       Int // Foreign key referencing User model
+  signature     String // Signature associated with the task
+  amount        String // Amount associated with the task
+  done          Boolean @default(false) // Status of the task, default is not done
+  user          User @relation(fields: [user_id],references: [id]) // Relation to User model
+  submissions   Submission[] // One-to-many relationship with Submission model
 }
 
+// Define the Option model
 model Option {
-   id           Int @id @default(autoincrement())
-   image_url    String?
-   task_id      Int
-   task         Task @relation(fields: [task_id],references: [id])
-   submission   Submission[]
-
+   id           Int @id @default(autoincrement()) // Unique identifier for each option, auto-incremented
+   image_url    String? // URL of the image, optional
+   task_id      Int // Foreign key referencing Task model
+   task         Task @relation(fields: [task_id],references: [id]) // Relation to Task model
+   submission   Submission[] // One-to-many relationship with Submission model
 }
 
+// Define the Submission model
 model  Submission {
-  id             Int @id @default(autoincrement())
-  worker_id      Int
-  worker         Worker @relation(fields: [worker_id],references: [id])
-  option_id      Int
-  option         Option @relation(fields: [option_id],references: [id])
-  task_id        Int
-  task           Task @relation(fields: [task_id],references: [id])
-  amount         String
-  @@unique([worker_id,task_id])
-
+  id             Int @id @default(autoincrement()) // Unique identifier for each submission, auto-incremented
+  worker_id      Int // Foreign key referencing Worker model
+  worker         Worker @relation(fields: [worker_id],references: [id]) // Relation to Worker model
+  option_id      Int // Foreign key referencing Option model
+  option         Option @relation(fields: [option_id],references: [id]) // Relation to Option model
+  task_id        Int // Foreign key referencing Task model
+  task           Task @relation(fields: [task_id],references: [id]) // Relation to Task model
+  amount         String // Amount associated with the submission
+  @@unique([worker_id,task_id]) // Composite unique constraint on worker_id and task_id
 }
