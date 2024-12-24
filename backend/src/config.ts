@@ -2,3 +2,4 @@
 export const JWT_SECRET = "secret";
 // WORKER_JWT_SECRET is derived from JWT_SECRET and is specifically used for worker-related JWT tokens
 export const WORKER_JWT_SECRET = JWT_SECRET + "worker";
+WORKER_JWT_SECRET
