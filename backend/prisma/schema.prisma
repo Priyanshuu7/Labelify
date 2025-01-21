@@ -12,7 +12,7 @@ generator client {
 
 // Define the datasource for the database connection
 datasource db {
-  provider = "postgresql" // Use PostgreSQL as the database provider
+  provider = "postgresql" 
   url      = env("DATABASE_URL") // Database URL is fetched from environment variables
 }
 
