@@ -13,7 +13,7 @@ generator client {
 // Define the datasource for the database connection
 datasource db {
   provider = "postgresql" 
-  url      = env("DATABASE_URL") 
+  url      = env("DATABASE_URL") // Database URL is fetched from environment variables
 }
 
 // Define the User model
