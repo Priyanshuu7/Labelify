@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createSubmissionInput = exports.createTaskInput = void 0;
+// import { sign } from "jsonwebtoken"; // Import the sign function from jsonwebtoken library
 const zod_1 = __importDefault(require("zod")); // Import the zod library for schema validation
 // Define the schema for creating a task input
 exports.createTaskInput = zod_1.default.object({
