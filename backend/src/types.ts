@@ -9,6 +9,7 @@ export const createTaskInput = z.object({
     })
   ),
   title: z.string().optional(), // Title is an optional string
+  
   signature: z.string(), // Signature is a required string
 });
 
