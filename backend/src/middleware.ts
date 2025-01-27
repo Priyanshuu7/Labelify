@@ -53,7 +53,7 @@ export const WorkerMiddleware = (
       res.status(403).json({ message: "You are not logged in" });
     }
   } catch (e) {
-    // verification fails, respond with a 403 status
+    // If token verification fails, respond with a 403 status
     res.status(403).json({ message: "You are not logged in" });
   }
 };
