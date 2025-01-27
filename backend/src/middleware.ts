@@ -49,7 +49,7 @@ export const WorkerMiddleware = (
       // Proceed to the next middleware or route handler
       next();
     } else {
-      // If userId is not present, respond with a 403 status
+      // respond with a 403 status
       res.status(403).json({ message: "You are not logged in" });
     }
   } catch (e) {
