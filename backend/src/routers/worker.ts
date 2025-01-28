@@ -107,7 +107,7 @@ router.post("/signin", async (req, res) => {
       },
       WORKER_JWT_SECRET
     );
-    res.json({ token }); 
+    res.json({ token }); // Respond with the token
   } else {
     // If user does not exist, create a new worker
     const user = await prismaClient.worker.create({
