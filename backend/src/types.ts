@@ -1,4 +1,3 @@
-// import { sign } from "jsonwebtoken"; // Import the sign function from jsonwebtoken library
 import z from "zod"; // Import the zod library for schema validation
 
 // Define the schema for creating a task input
