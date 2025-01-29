@@ -113,6 +113,7 @@ router.post("/task", authMiddleware, async (req, res) => {
         user_id: userId,
       },
     });
+    // create a prisma transction here //
     await tx.option.createMany({
       data: parseData.data.options.map((option) => ({
         image_url: option.imageUrl,
