@@ -100,6 +100,7 @@ router.post("/signin", async (req, res) => {
   });
 
   if (existingUser) {
+    // If user exists, generate a JWT token
     const token = jwt.sign(
       {
         userId: existingUser.id,
