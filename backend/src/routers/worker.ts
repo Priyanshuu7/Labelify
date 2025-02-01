@@ -10,6 +10,7 @@ import { createSubmissionInput } from "../types";
 // Define a constant for total submissions
 const TOTAL_SUBMISSIONS = 100;
 
+// Initialize Express Router and Prisma Client
 const router = Router();
 const prismaClient = new PrismaClient();
 
