@@ -17,7 +17,7 @@ const prismaClient = new PrismaClient();
 // Route to handle submission creation
 router.post("/submission", WorkerMiddleware, async (req, res) => {
   //@ts-ignore
-  const userId = req.userId; // Extract user ID from request
+  const userId = req.userId;
   const body = req.body; // Get request body
   const paredBody = createSubmissionInput.safeParse(body); // Validate and parse request body
 
