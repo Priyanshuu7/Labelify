@@ -108,6 +108,7 @@ router.post("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0
                 user_id: userId,
             },
         });
+        // create a prisma transction here //
         yield tx.option.createMany({
             data: parseData.data.options.map((option) => ({
                 image_url: option.imageUrl,

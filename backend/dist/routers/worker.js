@@ -28,7 +28,7 @@ const prismaClient = new client_1.PrismaClient();
 // Route to handle submission creation
 router.post("/submission", middleware_1.WorkerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //@ts-ignore
-    const userId = req.userId; // Extract user ID from request
+    const userId = req.userId;
     const body = req.body; // Get request body
     const paredBody = types_1.createSubmissionInput.safeParse(body); // Validate and parse request body
     if (paredBody.success) {
