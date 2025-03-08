@@ -4,14 +4,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createSubmissionInput = exports.createTaskInput = void 0;
-// import { sign } from "jsonwebtoken"; // Import the sign function from jsonwebtoken library
+// import { sign } from "jsonwebtoken"; // Import the sign function from
+// jsonwebtoken library
 const zod_1 = __importDefault(require("zod")); // Import the zod library for schema validation
 // Define the schema for creating a task input
 exports.createTaskInput = zod_1.default.object({
     options: zod_1.default.array(zod_1.default.object({
         imageUrl: zod_1.default.string(), // Each option must have an imageUrl of type string
     })),
-    title: zod_1.default.string().optional(), // Title is an optional string
+    title: zod_1.default
+        .string()
+        .optional(), // Title is an optional string
     signature: zod_1.default.string(), // Signature is a required string
 });
 // Define the schema for creating a submission input

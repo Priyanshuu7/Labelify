@@ -17,19 +17,23 @@ const authMiddleware = (req, res, next) => {
         //@ts-ignore
         if (decoded.userId) {
             // If userId is present in the decoded token, attach it to the request object
-            //@ts-ignore
+            // @ts-ignore
             req.userId = decoded.userId;
             // Proceed to the next middleware or route handler
             next();
         }
         else {
             // If userId is not present, respond with a 403 status
-            res.status(403).json({ message: "You are not logged in" });
+            res
+                .status(403)
+                .json({ message: "You are not logged in" });
         }
     }
     catch (e) {
         // If token verification fails, respond with a 403 status
-        res.status(403).json({ message: "You are not logged in" });
+        res
+            .status(403)
+            .json({ message: "You are not logged in" });
     }
 };
 exports.authMiddleware = authMiddleware;
@@ -44,19 +48,23 @@ const WorkerMiddleware = (req, res, next) => {
         //@ts-ignore
         if (decoded.userId) {
             // If userId is present in the decoded token, attach it to the request object
-            //@ts-ignore
+            // @ts-ignore
             req.userId = decoded.userId;
             // Proceed to the next middleware or route handler
             next();
         }
         else {
             // If userId is not present, respond with a 403 status
-            res.status(403).json({ message: "You are not logged in" });
+            res
+                .status(403)
+                .json({ message: "You are not logged in" });
         }
     }
     catch (e) {
         // If token verification fails, respond with a 403 status
-        res.status(403).json({ message: "You are not logged in" });
+        res
+            .status(403)
+            .json({ message: "You are not logged in" });
     }
 };
 exports.WorkerMiddleware = WorkerMiddleware;

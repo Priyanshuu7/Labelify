@@ -15,22 +15,25 @@ const client_1 = require("@prisma/client");
 const prismaClient = new client_1.PrismaClient();
 // Function to get the next task for a user
 const getNextTask = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    // Find the first task that is not done and has no submissions from the given user
-    const task = yield prismaClient.task.findFirst({
+    // Find the first task that is not done and has no submissions from the given
+    // user
+    const task = yield prismaClient
+        .task
+        .findFirst({
         where: {
             done: false,
             submissions: {
                 none: {
-                    worker_id: userId,
-                },
-            },
+                    worker_id: userId
+                }
+            }
         },
         select: {
             id: true, // Select task ID
             amount: true, // Select task amount
             title: true, // Select task title
             options: true, // Select task options
-        },
+        }
     });
     return task; // Return the found task
 });
