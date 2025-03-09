@@ -16,7 +16,6 @@ const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const client_s3_1 = require("@aws-sdk/client-s3");
-// import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 const config_1 = require("../config");
 const middleware_1 = require("../middleware");
 const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
@@ -43,9 +42,9 @@ router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0,
     const taskId = req.query.taskId; // ✅ Correct
     //@ts-ignore
     const userId = req.userId;
-    console.log(taskId);
-    console.log(userId);
-    const taskDetails = yield prismaClient.task.findFirst({
+    const taskDetails = yield prismaClient
+        .task
+        .findFirst({
         where: {
             user_id: Number(userId),
             id: Number(taskId)
@@ -55,10 +54,14 @@ router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0,
         }
     });
     if (!taskDetails) {
-        res.status(411).json({ message: "You dont have acces to this task" });
+        res
+            .status(411)
+            .json({ message: "You dont have acces to this task" });
         return;
     }
-    const responses = yield prismaClient.submission.findMany({
+    const responses = yield prismaClient
+        .submission
+        .findMany({
         where: {
             task_id: Number(taskId)
         },
@@ -67,11 +70,9 @@ router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0,
         }
     });
     // Create an array to store the results
-    const resultArray = taskDetails.options.map(option => ({
-        optionId: option.id,
-        count: 0,
-        imageUrl: option.image_url
-    }));
+    const resultArray = taskDetails
+        .options
+        .map(option => ({ optionId: option.id, count: 0, imageUrl: option.image_url }));
     // Count submissions for each option
     responses.forEach((r) => {
         const option = resultArray.find(opt => opt.optionId === r.option_id);
