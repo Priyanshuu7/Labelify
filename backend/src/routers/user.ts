@@ -28,41 +28,45 @@ const s3Client = new S3Client({
 // Route to get task details
 router.get("/task", authMiddleware, async(req, res) => {
     //@ts-ignore
-    const taskId: string = req.query.taskId; // ✅ Correct
+    const taskId : string = req.query.taskId; // ✅ Correct
     //@ts-ignore
     const userId : string = req.userId;
- 
-    const taskDetails = await prismaClient.task.findFirst({
-        where: {
-            
-            user_id: Number(userId),
 
-            id: Number(taskId)
-        },
-        include: {
-            options: true
-        }
-    });
+    const taskDetails = await prismaClient
+        .task
+        .findFirst({
+            where: {
+
+                user_id: Number(userId),
+
+                id: Number(taskId)
+            },
+            include: {
+                options: true
+            }
+        });
     if (!taskDetails) {
-        res.status(411).json({message: "You dont have acces to this task"});
+        res
+            .status(411)
+            .json({message: "You dont have acces to this task"});
         return;
     }
 
-    const responses = await prismaClient.submission.findMany({
-        where: {
-            task_id: Number(taskId)
-        },
-        include: {
-            option: true
-        }
-    });
+    const responses = await prismaClient
+        .submission
+        .findMany({
+            where: {
+                task_id: Number(taskId)
+            },
+            include: {
+                option: true
+            }
+        });
 
     // Create an array to store the results
-    const resultArray = taskDetails.options.map(option => ({
-        optionId: option.id,
-        count: 0,
-        imageUrl: option.image_url
-    }));
+    const resultArray = taskDetails
+        .options
+        .map(option => ({optionId: option.id, count: 0, imageUrl: option.image_url}));
 
     // Count submissions for each option
     responses.forEach((r) => {
@@ -73,7 +77,7 @@ router.get("/task", authMiddleware, async(req, res) => {
     });
 
     // Send the array result as JSON response
-    res.json({ result: resultArray });
+    res.json({result: resultArray});
 });
 
 // Route to create a new task
