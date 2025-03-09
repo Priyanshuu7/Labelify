@@ -2,7 +2,6 @@ import {response, Router} from "express";
 import {PrismaClient} from "@prisma/client";
 import jwt from "jsonwebtoken";
 import {S3Client, GetObjectCommand} from "@aws-sdk/client-s3";
-// import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {JWT_SECRET} from "../config";
 import {authMiddleware} from "../middleware";
 import {createPresignedPost} from "@aws-sdk/s3-presigned-post";
