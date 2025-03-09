@@ -26,59 +26,111 @@ const TOTAL_SUBMISSIONS = 100;
 const router = (0, express_1.Router)();
 const prismaClient = new client_1.PrismaClient();
 // Route to handle submission creation
+// router.post("/submission", WorkerMiddleware, async(req, res) => {
+//     //@ts-ignore
+//     const userId = req.userId;
+//     const body = req.body; // Get request body
+//     const paredBody = createSubmissionInput.safeParse(body); // Validate and parse request body
+//     if (paredBody.success) {
+//         // If parsing is successful
+//         const task = await getNextTask(Number(userId)); // Fetch the next task for the user
+//         if (!task || task
+//             ?.id !== Number(paredBody.data.taskId)) {
+//             // Check if task is valid
+//             res
+//                 .status(411)
+//                 .json({
+//                     message: "You already completed this task", // Respond with error if task ID is incorrect
+//                 });
+//             return;
+//         }
+//         // Calculate the amount for the submission
+//         const amount = (Number(task.amount) / TOTAL_SUBMISSIONS).toString();
+//         const submission = prismaClient.$transaction(async(tx) => {
+//             // Create a new submission in the database
+//             const submission = await tx
+//                 .submission
+//                 .create({
+//                     data: {
+//                         option_id: Number(paredBody.data.selection),
+//                         worker_id: userId,
+//                         task_id: Number(paredBody.data.taskId),
+//                         amount
+//                     }
+//                 });
+//             await tx
+//                 .worker
+//                 .update({
+//                     where: {
+//                         id: userId
+//                     },
+//                     data: {
+//                         pending_amount: {
+//                             increment: Number(amount)
+//                         }
+//                     }
+//                 });
+//             return submission;
+//         });
+//         // Fetch the next task for the user after submission
+//         const nextTask = await getNextTask(Number(userId));
+//         // Respond with the next task and the amount for the current submission
+//         res.json({nextTask, amount});
+//     } else {
+//         // Handle case where parsing fails (currently does nothing)
+//     }
+// });
 router.post("/submission", middleware_1.WorkerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //@ts-ignore
     const userId = req.userId;
-    const body = req.body; // Get request body
-    const paredBody = types_1.createSubmissionInput.safeParse(body); // Validate and parse request body
-    if (paredBody.success) {
-        // If parsing is successful
-        const task = yield (0, db_1.getNextTask)(Number(userId)); // Fetch the next task for the user
-        if (!task || (task === null || task === void 0 ? void 0 : task.id) !== Number(paredBody.data.taskId)) {
-            // Check if task is valid
-            res
-                .status(411)
-                .json({
-                message: "You already completed this task", // Respond with error if task ID is incorrect
-            });
-            return;
-        }
-        // Calculate the amount for the submission
-        const amount = (Number(task.amount) / TOTAL_SUBMISSIONS).toString();
-        const submission = prismaClient.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-            // Create a new submission in the database
-            const submission = yield tx
-                .submission
-                .create({
-                data: {
-                    option_id: Number(paredBody.data.selection),
-                    worker_id: userId,
-                    task_id: Number(paredBody.data.taskId),
-                    amount
-                }
-            });
-            yield tx
-                .worker
-                .update({
-                where: {
-                    id: userId
-                },
-                data: {
-                    pending_amount: {
-                        increment: Number(amount)
+    const body = req.body;
+    const parsedBody = types_1.createSubmissionInput.safeParse(body);
+    if (!parsedBody.success) {
+        res.status(411).json({ message: "Incorrect inputs" });
+        return;
+    }
+    const task = yield (0, db_1.getNextTask)(Number(userId));
+    if (!task || task.id !== Number(parsedBody.data.taskId)) {
+        res.status(411).json({ message: "You already completed this task" });
+        return;
+    }
+    const amount = (Number(task.amount) / TOTAL_SUBMISSIONS).toString();
+    const { submission, nextTask } = yield prismaClient.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        // Create a new submission
+        const submission = yield tx.submission.create({
+            data: {
+                option_id: Number(parsedBody.data.selection),
+                worker_id: userId,
+                task_id: Number(parsedBody.data.taskId),
+                amount: amount
+            }
+        });
+        // Update worker's pending amount
+        yield tx.worker.update({
+            where: { id: userId },
+            data: { pending_amount: { increment: Number(amount) } }
+        });
+        // Fetch next task inside the transaction to ensure updated data
+        const nextTask = yield tx.task.findFirst({
+            where: {
+                done: false,
+                submissions: {
+                    none: {
+                        worker_id: userId
                     }
                 }
-            });
-            return submission;
-        }));
-        // Fetch the next task for the user after submission
-        const nextTask = yield (0, db_1.getNextTask)(Number(userId));
-        // Respond with the next task and the amount for the current submission
-        res.json({ nextTask, amount });
-    }
-    else {
-        // Handle case where parsing fails (currently does nothing)
-    }
+            },
+            select: {
+                id: true,
+                amount: true,
+                title: true,
+                options: true
+            }
+        });
+        return { submission, nextTask };
+    }));
+    res.json({ nextTask, amount });
+    return;
 }));
 // Route to get the next task for the worker
 router.get("/nextTask", middleware_1.WorkerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
