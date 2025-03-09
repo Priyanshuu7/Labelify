@@ -1,12 +1,8 @@
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule)
-        ? mod
-        : {
-            "default": mod
-        };
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-Object.defineProperty(exports, "__esModule", {value: true});
+Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express")); // Import the express module
 const user_1 = __importDefault(require("./routers/user")); // Import the user router
 const worker_1 = __importDefault(require("./routers/worker")); // Import the worker router

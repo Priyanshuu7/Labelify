@@ -1,5 +1,5 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", {value: true});
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.WORKER_JWT_SECRET = exports.JWT_SECRET = void 0;
 // JWT_SECRET is the base secret key used for signing JWT tokens tokens
 exports.JWT_SECRET = "secret";
