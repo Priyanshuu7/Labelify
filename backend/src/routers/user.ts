@@ -6,6 +6,7 @@ import {JWT_SECRET} from "../config";
 import {authMiddleware} from "../middleware";
 import {createPresignedPost} from "@aws-sdk/s3-presigned-post";
 import {createTaskInput} from "../types";
+import { TOTAL_DECIMALS } from "../config";
 
 // Default title for tasks if none is provided
 const DEFAULT_TITLE = "Select the most clickable thumbnail";
@@ -100,7 +101,7 @@ router.post("/task", authMiddleware, async(req, res) => {
             .create({
                 data: {
                     title: parseData.data.title || DEFAULT_TITLE,
-                    amount: "1",
+                    amount: 1 * TOTAL_DECIMALS,
                     signature: parseData.data.signature,
                     user_id: userId
                 }

@@ -11,15 +11,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getNextTask = void 0;
 const client_1 = require("@prisma/client");
-// Initialize Prisma Client
 const prismaClient = new client_1.PrismaClient();
-// Function to get the next task for a user
 const getNextTask = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    // Find the first task that is not done and has no submissions from the given
-    // user
-    const task = yield prismaClient
-        .task
-        .findFirst({
+    const task = yield prismaClient.task.findFirst({
         where: {
             done: false,
             submissions: {
@@ -29,12 +23,12 @@ const getNextTask = (userId) => __awaiter(void 0, void 0, void 0, function* () {
             }
         },
         select: {
-            id: true, // Select task ID
-            amount: true, // Select task amount
-            title: true, // Select task title
-            options: true, // Select task options
+            id: true,
+            amount: true,
+            title: true,
+            options: true
         }
     });
-    return task; // Return the found task
+    return task;
 });
 exports.getNextTask = getNextTask;

@@ -38,7 +38,7 @@ model Task {
   options       Option[] // One-to-many relationship with Option model
   user_id       Int // Foreign key referencing User model
   signature     String // Signature associated with the task
-  amount        String // Amount associated with the task
+  amount        Int // Amount associated with the task
   done          Boolean @default(false) // Status of the task, default is not done
   user          User @relation(fields: [user_id],references: [id]) // Relation to User model
   submissions   Submission[] // One-to-many relationship with Submission model
@@ -62,6 +62,6 @@ model  Submission {
   option         Option @relation(fields: [option_id],references: [id]) // Relation to Option model
   task_id        Int // Foreign key referencing Task model
   task           Task @relation(fields: [task_id],references: [id]) // Relation to Task model
-  amount         String // Amount associated with the submission
+  amount         Int // Amount associated with the submission
   @@unique([worker_id,task_id]) // Composite unique constraint on worker_id and task_id
 }

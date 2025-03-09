@@ -47,7 +47,7 @@ router.post("/submission", middleware_1.WorkerMiddleware, (req, res) => __awaite
         const amount = (Number(task.amount) / TOTAL_SUBMISSIONS).toString();
         const submission = prismaClient.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             // Create a new submission in the database
-            const submission = yield prismaClient
+            const submission = yield tx
                 .submission
                 .create({
                 data: {
@@ -57,7 +57,7 @@ router.post("/submission", middleware_1.WorkerMiddleware, (req, res) => __awaite
                     amount
                 }
             });
-            yield prismaClient
+            yield tx
                 .worker
                 .update({
                 where: {
@@ -137,6 +137,18 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
         }, config_1.WORKER_JWT_SECRET);
         res.json({ token }); // Respond with the token
     }
+}));
+router.get("/balance", middleware_1.WorkerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.userId;
+    const worker = yield prismaClient.worker.findFirst({
+        where: {
+            id: Number(userId)
+        }
+    });
+    res.json({
+        PendingAmount: worker === null || worker === void 0 ? void 0 : worker.pending_amount,
+        LockedAmount: worker === null || worker === void 0 ? void 0 : worker.locked_amount
+    });
 }));
 console.log(config_1.WORKER_JWT_SECRET);
 // Export the router for use in other parts of the application

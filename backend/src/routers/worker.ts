@@ -1,11 +1,12 @@
 // Import necessary modules and dependencies
-import {Router} from "express";
+import {Router, Request} from "express";
 import {PrismaClient} from "@prisma/client";
 import jwt from "jsonwebtoken";
 import {WorkerMiddleware} from "../middleware";
 import {WORKER_JWT_SECRET} from "../config";
 import {getNextTask} from "../db";
 import {createSubmissionInput} from "../types";
+import { TOTAL_DECIMALS } from "../config";
 
 // Define a constant for total submissions
 const TOTAL_SUBMISSIONS = 100;
@@ -39,7 +40,7 @@ router.post("/submission", WorkerMiddleware, async(req, res) => {
 
         const submission = prismaClient.$transaction(async(tx) => {
             // Create a new submission in the database
-            const submission = await prismaClient
+            const submission = await tx
                 .submission
                 .create({
                     data: {
@@ -49,7 +50,7 @@ router.post("/submission", WorkerMiddleware, async(req, res) => {
                         amount
                     }
                 });
-            await prismaClient
+            await tx
                 .worker
                 .update({
                     where: {
@@ -134,6 +135,22 @@ router.post("/signin", async(req, res) => {
     }
 });
 
+router.get("/balance", WorkerMiddleware, async(req: Request & { userId?: string }, res) => {
+    const userId = req.userId;
+    
+    const worker  = await prismaClient.worker.findFirst({
+        where:{
+            id:Number(userId)
+
+        }
+    })
+    res.json({
+        PendingAmount : worker?.pending_amount,
+        LockedAmount : worker?.locked_amount
+    })
+
+
+})
 console.log(WORKER_JWT_SECRET);
 
 // Export the router for use in other parts of the application

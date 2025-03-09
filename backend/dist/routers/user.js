@@ -20,6 +20,7 @@ const config_1 = require("../config");
 const middleware_1 = require("../middleware");
 const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
 const types_1 = require("../types");
+const config_2 = require("../config");
 // Default title for tasks if none is provided
 const DEFAULT_TITLE = "Select the most clickable thumbnail";
 // Initialize Prisma Client for database operations
@@ -102,7 +103,7 @@ router.post("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0
             .create({
             data: {
                 title: parseData.data.title || DEFAULT_TITLE,
-                amount: "1",
+                amount: 1 * config_2.TOTAL_DECIMALS,
                 signature: parseData.data.signature,
                 user_id: userId
             }
