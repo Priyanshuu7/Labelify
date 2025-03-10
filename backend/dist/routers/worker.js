@@ -32,27 +32,26 @@ const prismaClient = new client_1.PrismaClient();
 // request body     if (paredBody.success) {         // If parsing is successful
 //         const task = await getNextTask(Number(userId)); // Fetch the next
 // task for the user         if (!task || task             ?.id !==
-// Number(paredBody.data.taskId)) {             // Check if task is valid
-// res                 .status(411)                 .json({     message: "You
-// already completed this task", // Respond with error if task ID is incorrect
-//               });             return;         }  // Calculate the amount for
-// the submission         const amount = (Number(task.amount) /
+// Number(paredBody.data.taskId)) {             // Check if task is valid res
+//              .status(411)                 .json({     message: "You already
+// completed this task", // Respond with error if task ID is incorrect
+//     });             return;         }  // Calculate the amount for the
+// submission         const amount = (Number(task.amount) /
 // TOTAL_SUBMISSIONS).toString();         const submission =
 // prismaClient.$transaction(async(tx) => {             // Create a new
 // submission in the database             const submission = await tx
 // .submission                 .create({                     data: {
-//          option_id: Number(paredBody.data.selection),             worker_id:
-// userId,                         task_id: Number(paredBody.data.taskId),
-//                   amount     }                 });             await tx
-//           .worker          .update({                     where: {
-//             id: userId                     },                     data: {
-// pending_amount: {                             increment: Number(amount)
-//                 }                     }                 }); return
-// submission;         });         // Fetch the next task for the user after
-// submission         const nextTask = await getNextTask(Number(userId));
-// // Respond with the next task and the amount for the current submission
-//   res.json({nextTask, amount});     } else {         // Handle case where
-// parsing fails (currently does nothing)     } });
+// option_id: Number(paredBody.data.selection),             worker_id: userId,
+//                       task_id: Number(paredBody.data.taskId),
+//   amount     }                 });             await tx           .worker
+//      .update({                     where: {             id: userId
+//          },                     data: { pending_amount: {
+//         increment: Number(amount)                 }                     }
+//             }); return submission;         });         // Fetch the next task
+// for the user after submission         const nextTask = await
+// getNextTask(Number(userId)); // Respond with the next task and the amount for
+// the current submission   res.json({nextTask, amount});     } else {
+// // Handle case where parsing fails (currently does nothing)     } });
 router.post("/submission", middleware_1.WorkerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //@ts-ignore
     const userId = req.userId;
@@ -195,21 +194,25 @@ router.get("/balance", middleware_1.WorkerMiddleware, (req, res) => __awaiter(vo
 }));
 router.post("/payout", middleware_1.WorkerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.userId;
-    const worker = yield prismaClient.worker.findFirst({
+    const worker = yield prismaClient
+        .worker
+        .findFirst({
         where: {
             id: Number(userId)
         }
     });
     if (!worker) {
-        res.status(403).json({
-            "messaage": "user not found"
-        });
+        res
+            .status(403)
+            .json({ "messaage": "user not found" });
         return;
     }
     const address = worker.address;
     const txnId = "0x12334";
     yield prismaClient.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        yield tx.worker.update({
+        yield tx
+            .worker
+            .update({
             where: {
                 id: Number(userId)
             },
@@ -222,7 +225,9 @@ router.post("/payout", middleware_1.WorkerMiddleware, (req, res) => __awaiter(vo
                 }
             }
         });
-        yield tx.payouts.create({
+        yield tx
+            .payouts
+            .create({
             data: {
                 user_id: Number(userId),
                 amount: worker.pending_amount,
@@ -231,10 +236,7 @@ router.post("/payout", middleware_1.WorkerMiddleware, (req, res) => __awaiter(vo
             }
         });
     }));
-    res.json({
-        "Message": "Processing Payouts",
-        amount: worker.pending_amount
-    });
+    res.json({ "Message": "Processing Payouts", amount: worker.pending_amount });
 }));
 console.log(config_1.WORKER_JWT_SECRET);
 // Export the router for use in other parts of the application

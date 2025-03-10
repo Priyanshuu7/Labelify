@@ -21,7 +21,7 @@ const middleware_1 = require("../middleware");
 const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
 const types_1 = require("../types");
 const config_2 = require("../config");
-// Default title for tasks if none is provided
+// Default title for tasks if noneis provided
 const DEFAULT_TITLE = "Select the most clickable thumbnail";
 // Initialize Prisma Client for database operations
 const prismaClient = new client_1.PrismaClient();
