@@ -8,7 +8,7 @@ import {createPresignedPost} from "@aws-sdk/s3-presigned-post";
 import {createTaskInput} from "../types";
 import {TOTAL_DECIMALS} from "../config";
 
-// Default title for tasks if none is provided
+// Default title for tasks if noneis provided
 const DEFAULT_TITLE = "Select the most clickable thumbnail";
 
 // Initialize Prisma Client for database operations
