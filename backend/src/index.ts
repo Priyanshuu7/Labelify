@@ -1,9 +1,13 @@
 import express from "express"; // Import the express module
 import userRouter from "./routers/user"; // Import the user router
 import workerRouter from "./routers/worker"; // Import the worker router
+import cors from "cors"
+
 
 const app = express(); // Create an instance of express
 app.use(express.json()); // Middleware to parse JSON bodies
+
+app.use(cors());
 
 // Use the user router for routes starting with /v1/user
 app.use("/v1/user", userRouter);
