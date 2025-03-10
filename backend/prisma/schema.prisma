@@ -20,6 +20,7 @@ model User {
   id            Int  @id @default(autoincrement()) // Unique identifier for each user, auto-incremented
   address       String @unique // Unique address for each user
   tasks         Task[] // One-to-many relationship with Task model
+  payouts       Payouts[]
 }
 
 // Define the Worker model
@@ -64,4 +65,19 @@ model  Submission {
   task           Task @relation(fields: [task_id],references: [id]) // Relation to Task model
   amount         Int // Amount associated with the submission
   @@unique([worker_id,task_id]) // Composite unique constraint on worker_id and task_id
+}
+
+model Payouts{
+  id          Int @id @default(autoincrement())
+  user_id      Int
+  user        User @relation(fields: [user_id] ,references: [id])
+  amount      Int
+  signature   String
+  status      TxnStatus
+}
+
+enum TxnStatus{
+  Processing
+  Sucsess
+  Failure
 }

@@ -7,6 +7,7 @@ import {WORKER_JWT_SECRET} from "../config";
 import {getNextTask} from "../db";
 import {createSubmissionInput} from "../types";
 import {TOTAL_DECIMALS} from "../config";
+import {number} from "zod";
 
 // Define a constant for total submissions
 const TOTAL_SUBMISSIONS = 100;
@@ -23,27 +24,26 @@ const prismaClient = new PrismaClient();
 //         const task = await getNextTask(Number(userId)); // Fetch the next
 // task for the user         if (!task || task             ?.id !==
 // Number(paredBody.data.taskId)) {             // Check if task is valid
-//      res                 .status(411)                 .json({
-//     message: "You already completed this task", // Respond with error if
-// task ID is incorrect                 });             return;         }
-//  // Calculate the amount for the submission         const amount =
-// (Number(task.amount) / TOTAL_SUBMISSIONS).toString();         const
-// submission = prismaClient.$transaction(async(tx) => {             // Create a
-// new submission in the database             const submission = await tx
-//          .submission                 .create({                     data: {
-//                      option_id: Number(paredBody.data.selection),
-//             worker_id: userId,                         task_id:
-// Number(paredBody.data.taskId),                         amount
-//     }                 });             await tx                 .worker
-//          .update({                     where: {                         id:
-// userId                     },                     data: {
-//     pending_amount: {                             increment: Number(amount)
-//                       }                     }                 });
-// return submission;         });         // Fetch the next task for the user
-// after submission         const nextTask = await getNextTask(Number(userId));
-//        // Respond with the next task and the amount for the current
-// submission         res.json({nextTask, amount});     } else {         //
-// Handle case where parsing fails (currently does nothing)     } });
+// res                 .status(411)                 .json({     message: "You
+// already completed this task", // Respond with error if task ID is incorrect
+//               });             return;         }  // Calculate the amount for
+// the submission         const amount = (Number(task.amount) /
+// TOTAL_SUBMISSIONS).toString();         const submission =
+// prismaClient.$transaction(async(tx) => {             // Create a new
+// submission in the database             const submission = await tx
+// .submission                 .create({                     data: {
+//          option_id: Number(paredBody.data.selection),             worker_id:
+// userId,                         task_id: Number(paredBody.data.taskId),
+//                   amount     }                 });             await tx
+//           .worker          .update({                     where: {
+//             id: userId                     },                     data: {
+// pending_amount: {                             increment: Number(amount)
+//                 }                     }                 }); return
+// submission;         });         // Fetch the next task for the user after
+// submission         const nextTask = await getNextTask(Number(userId));
+// // Respond with the next task and the amount for the current submission
+//   res.json({nextTask, amount});     } else {         // Handle case where
+// parsing fails (currently does nothing)     } });
 router.post("/submission", WorkerMiddleware, async(req, res) => {
     //@ts-ignore
     const userId = req.userId;
@@ -65,11 +65,11 @@ router.post("/submission", WorkerMiddleware, async(req, res) => {
         return;
     }
 
-    const amount = (Number(task.amount) / TOTAL_SUBMISSIONS).toString();
+    const amount = Number(task.amount) / TOTAL_SUBMISSIONS;
 
     const {submission, nextTask} = await prismaClient.$transaction(async(tx) => {
         // Create a new submission
-        const submission = await tx
+        const submission = await tx 
             .submission
             .create({
                 data: {
@@ -202,6 +202,58 @@ router.get("/balance", WorkerMiddleware, async(req : Request & {
     })
 
 })
+
+router.post("/payout", WorkerMiddleware, async(req : Request & {
+    userId?: string
+}, res) => {
+    const userId = req.userId;
+    const worker = await prismaClient.worker.findFirst({
+        where: {
+            id: Number(userId)
+        }
+    });
+    
+    if (!worker){
+        res.status(403).json({
+            "messaage": "user not found"
+        });
+        return;
+    }
+
+    const address = worker.address;
+    const txnId = "0x12334";
+
+    await prismaClient.$transaction(async tx =>{
+        await tx.worker.update({
+            where:{
+                id: Number(userId)
+            },
+            data:{
+                pending_amount:{
+                    decrement:worker.pending_amount
+                },
+                locked_amount:{
+                    increment:worker.pending_amount
+                }
+            }
+        });
+        await tx.payouts.create({
+            data:{
+                user_id:Number(userId),
+                amount:worker.pending_amount,
+                status:"Processing",
+                signature:txnId
+
+            }
+        })
+    });
+
+    res.json({
+        "Message" : "Processing Payouts",
+        amount : worker.pending_amount
+    })
+
+});
 console.log(WORKER_JWT_SECRET);
 
 // Export the router for use in other parts of the application

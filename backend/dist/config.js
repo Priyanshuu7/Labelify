@@ -6,4 +6,4 @@ exports.JWT_SECRET = "secret";
 // WORKER_JWT_SECRET is derived from JWT_SECRET and is specifically used for
 // worker-related JWT tokens
 exports.WORKER_JWT_SECRET = exports.JWT_SECRET + "worker";
-exports.TOTAL_DECIMALS = 1000000000;
+exports.TOTAL_DECIMALS = 1000000;
