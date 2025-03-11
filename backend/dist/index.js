@@ -6,8 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express")); // Import the express module
 const user_1 = __importDefault(require("./routers/user")); // Import the user router
 const worker_1 = __importDefault(require("./routers/worker")); // Import the worker router
+const cors_1 = __importDefault(require("cors"));
 const app = (0, express_1.default)(); // Create an instance of express
 app.use(express_1.default.json()); // Middleware to parse JSON bodies
+app.use((0, cors_1.default)());
 // Use the user router for routes starting with /v1/user
 app.use("/v1/user", user_1.default);
 // Use the worker router for routes starting with /v1/worker
