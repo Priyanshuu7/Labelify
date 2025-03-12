@@ -67,17 +67,19 @@ model  Submission {
   @@unique([worker_id,task_id]) // Composite unique constraint on worker_id and task_id
 }
 
+// Define the Payouts model for tracking payment transactions
 model Payouts{
-  id          Int @id @default(autoincrement())
-  user_id      Int
-  user        User @relation(fields: [user_id] ,references: [id])
-  amount      Int
-  signature   String
-  status      TxnStatus
+  id          Int @id @default(autoincrement()) // Unique identifier for each payout, auto-incremented
+  user_id      Int // Foreign key referencing User model
+  user        User @relation(fields: [user_id] ,references: [id]) // Relation to User model
+  amount      Int // Amount of the payout
+  signature   String // Signature associated with the payout
+  status      TxnStatus // Current status of the transaction
 }
 
+// Define transaction status enum
 enum TxnStatus{
-  Processing
-  Sucsess
-  Failure
+  Processing // Transaction is being processed
+  Sucsess    // Transaction completed successfully 
+  Failure    // Transaction failed
 }
