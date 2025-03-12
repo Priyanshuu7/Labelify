@@ -77,7 +77,7 @@ model Payouts{
   status      TxnStatus // Current status of the transaction
 }
 
-// Define transaction status enum
+// Define transaction status enum //
 enum TxnStatus{
   Processing // Transaction is being processed
   Sucsess    // Transaction completed successfully 
