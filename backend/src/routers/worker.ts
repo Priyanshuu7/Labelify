@@ -50,41 +50,46 @@ router.post("/submission", WorkerMiddleware, async(req, res) => {
     const parsedBody = createSubmissionInput.safeParse(body);
 
     if (!parsedBody.success) {
-        res
-            .status(411)
-            .json({message: "Incorrect inputs"});
+        res.status(411).json({message: "Incorrect inputs"});
+        return;
+    }
+
+    // First check if worker exists
+    const worker = await prismaClient.worker.findUnique({
+        where: {
+            id: Number(userId)
+        }
+    });
+
+    if (!worker) {
+        res.status(404).json({message: "Worker not found"});
         return;
     }
 
     const task = await getNextTask(Number(userId));
     if (!task || task.id !== Number(parsedBody.data.taskId)) {
-        res
-            .status(411)
-            .json({message: "You already completed this task"});
+        res.status(411).json({message: "You already completed this task"});
         return;
     }
 
     const amount = Number(task.amount) / TOTAL_SUBMISSIONS;
 
-    const {submission, nextTask} = await prismaClient.$transaction(async(tx) => {
-        // Create a new submission
-        const submission = await tx
-            .submission
-            .create({
-                data: {
-                    option_id: Number(parsedBody.data.selection),
-                    worker_id: userId,
-                    task_id: Number(parsedBody.data.taskId),
-                    amount: amount
-                }
-            });
-
+    const {nextTask} = await prismaClient.$transaction(async(tx) => {
+        const submission = await tx.submission.create({
+            data: {
+                option_id: Number(parsedBody.data.selection),
+                worker_id: Number(userId), // Ensure userId is a number
+                task_id: Number(parsedBody.data.taskId),
+                amount: amount
+            }
+        });
+        
         // Update worker's pending amount
         await tx
             .worker
             .update({
                 where: {
-                    id: userId
+                    id: Number(userId)
                 },
                 data: {
                     pending_amount: {
@@ -101,7 +106,7 @@ router.post("/submission", WorkerMiddleware, async(req, res) => {
                     done: false,
                     submissions: {
                         none: {
-                            worker_id: userId
+                            worker_id: Number(userId)
                         }
                     }
                 },
