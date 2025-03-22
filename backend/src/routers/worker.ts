@@ -6,8 +6,8 @@ import {WorkerMiddleware} from "../middleware";
 import {WORKER_JWT_SECRET} from "../config";
 import {getNextTask} from "../db";
 import {createSubmissionInput} from "../types";
-import {TOTAL_DECIMALS} from "../config";
-import {number} from "zod";
+// import {TOTAL_DECIMALS} from "../config";
+// import {number} from "zod";
 
 // Define a constant for total submissions
 const TOTAL_SUBMISSIONS = 100;

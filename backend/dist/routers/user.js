@@ -40,7 +40,7 @@ const s3Client = new client_s3_1.S3Client({
 // Route to get task details
 router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //@ts-ignore
-    const taskId = req.query.taskId; // ✅ Correct
+    const taskId = req.query.taskId;
     //@ts-ignore
     const userId = req.userId;
     const taskDetails = yield prismaClient

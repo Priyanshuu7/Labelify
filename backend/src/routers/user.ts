@@ -29,7 +29,7 @@ const s3Client = new S3Client({
 // Route to get task details
 router.get("/task", authMiddleware, async(req, res) => {
     //@ts-ignore
-    const taskId : string = req.query.taskId; // ✅ Correct
+    const taskId : string = req.query.taskId; 
     //@ts-ignore
     const userId : string = req.userId;
 
