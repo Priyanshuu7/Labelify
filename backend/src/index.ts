@@ -3,7 +3,6 @@ import userRouter from "./routers/user"; // Import the user router
 import workerRouter from "./routers/worker"; // Import the worker router
 import cors from "cors"
 
-
 const app = express(); // Create an instance of express
 app.use(express.json()); // Middleware to parse JSON bodies
 
