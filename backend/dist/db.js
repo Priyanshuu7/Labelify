@@ -13,7 +13,9 @@ exports.getNextTask = void 0;
 const client_1 = require("@prisma/client");
 const prismaClient = new client_1.PrismaClient();
 const getNextTask = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    const task = yield prismaClient.task.findFirst({
+    const task = yield prismaClient
+        .task
+        .findFirst({
         where: {
             done: false,
             submissions: {
