@@ -16,33 +16,6 @@ const TOTAL_SUBMISSIONS = 100;
 const router = Router();
 const prismaClient = new PrismaClient();
 
-// Route to handle submission creation router.post("/submission",
-// WorkerMiddleware, async(req, res) => {     //@ts-ignore     const userId =
-// req.userId;     const body = req.body; // Get request body     const
-// paredBody = createSubmissionInput.safeParse(body); // Validate and parse
-// request body     if (paredBody.success) {         // If parsing is successful
-//         const task = await getNextTask(Number(userId)); // Fetch the next
-// task for the user         if (!task || task             ?.id !==
-// Number(paredBody.data.taskId)) {             // Check if task is valid res
-//              .status(411)                 .json({     message: "You already
-// completed this task", // Respond with error if task ID is incorrect
-//     });             return;         }  // Calculate the amount for the
-// submission         const amount = (Number(task.amount) /
-// TOTAL_SUBMISSIONS).toString();         const submission =
-// prismaClient.$transaction(async(tx) => {             // Create a new
-// submission in the database             const submission = await tx
-// .submission                 .create({                     data: {
-// option_id: Number(paredBody.data.selection),             worker_id: userId,
-//                       task_id: Number(paredBody.data.taskId),
-//   amount     }                 });             await tx           .worker
-//      .update({                     where: {             id: userId
-//          },                     data: { pending_amount: {
-//         increment: Number(amount)                 }                     }
-//             }); return submission;         });         // Fetch the next task
-// for the user after submission         const nextTask = await
-// getNextTask(Number(userId)); // Respond with the next task and the amount for
-// the current submission   res.json({nextTask, amount});     } else {
-// // Handle case where parsing fails (currently does nothing)     } });
 router.post("/submission", WorkerMiddleware, async(req, res) => {
     //@ts-ignore
     const userId = req.userId;
