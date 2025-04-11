@@ -28,18 +28,19 @@ const s3Client = new S3Client({
 
 // Route to get task details
 router.get("/task", authMiddleware, async(req, res) => {
+    // Extract task ID from query parameters
     //@ts-ignore
     const taskId : string = req.query.taskId;
+    // Get authenticated user ID from middleware
     //@ts-ignore
     const userId : string = req.userId;
 
+    // Fetch task details and associated options from database
     const taskDetails = await prismaClient
         .task
         .findFirst({
             where: {
-
                 user_id: Number(userId),
-
                 id: Number(taskId)
             },
             include: {
@@ -53,6 +54,7 @@ router.get("/task", authMiddleware, async(req, res) => {
         return;
     }
 
+    // Get all submissions for this task with their selected options
     const responses = await prismaClient
         .submission
         .findMany({
@@ -64,12 +66,12 @@ router.get("/task", authMiddleware, async(req, res) => {
             }
         });
 
-    // Create an array to store the results
+    // Initialize result array with option details and zero counts
     const resultArray = taskDetails
         .options
         .map(option => ({optionId: option.id, count: 0, imageUrl: option.image_url}));
 
-    // Count submissions for each option
+    // Increment count for each option based on submissions
     responses.forEach((r) => {
         const option = resultArray.find(opt => opt.optionId === r.option_id);
         if (option) {
@@ -77,7 +79,7 @@ router.get("/task", authMiddleware, async(req, res) => {
         }
     });
 
-    // Send the array result as JSON response
+    // Return aggregated results showing count for each option
     res.json({result: resultArray});
 });
 
