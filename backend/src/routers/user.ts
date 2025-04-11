@@ -68,13 +68,19 @@ router.get("/task", authMiddleware, async(req, res) => {
 
     // Initialize result array with option details and zero counts
     const resultArray = taskDetails
-        .options
-        .map(option => ({optionId: option.id, count: 0, imageUrl: option.image_url}));
+        .options               // 'options' is an array of Option objects from the Task model
+        .map(option => ({      // For each option in the task
+            optionId: option.id,       // Store the option ID
+            count: 0,                  // Initialize count of votes for this option
+            imageUrl: option.image_url // Store the image URL for display
+        }));
 
-    // Increment count for each option based on submissions
-    responses.forEach((r) => {
+    // Count submissions for each option
+    responses.forEach((r) => {  // 'r' represents a single submission response
+        // Find the matching option in our result array
         const option = resultArray.find(opt => opt.optionId === r.option_id);
         if (option) {
+            // Increment the count for this option when it's found
             option.count++;
         }
     });
