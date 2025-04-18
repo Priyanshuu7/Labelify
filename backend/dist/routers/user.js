@@ -39,10 +39,13 @@ const s3Client = new client_s3_1.S3Client({
 });
 // Route to get task details
 router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // Extract task ID from query parameters
     //@ts-ignore
     const taskId = req.query.taskId;
+    // Get authenticated user ID from middleware
     //@ts-ignore
     const userId = req.userId;
+    // Fetch task details and associated options from database
     const taskDetails = yield prismaClient
         .task
         .findFirst({
@@ -60,6 +63,7 @@ router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0,
             .json({ message: "You dont have acces to this task" });
         return;
     }
+    // Get all submissions for this task with their selected options
     const responses = yield prismaClient
         .submission
         .findMany({
@@ -70,18 +74,24 @@ router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0,
             option: true
         }
     });
-    // Create an array to store the results
+    // Initialize result array with option details and zero counts
     const resultArray = taskDetails
-        .options
-        .map(option => ({ optionId: option.id, count: 0, imageUrl: option.image_url }));
+        .options // 'options' is an array of Option objects from the Task model
+        .map(option => ({
+        optionId: option.id, // Store the option ID
+        count: 0, // Initialize count of votes for this option
+        imageUrl: option.image_url // Store the image URL for display
+    }));
     // Count submissions for each option
     responses.forEach((r) => {
+        // Find the matching option in our result array
         const option = resultArray.find(opt => opt.optionId === r.option_id);
         if (option) {
+            // Increment the count for this option when it's found
             option.count++;
         }
     });
-    // Send the array result as JSON response
+    // Return aggregated results showing count for each option
     res.json({ result: resultArray });
 }));
 // Route to create a new task
