@@ -54,7 +54,7 @@ export const Upload = () => {
 
     return <div className="flex justify-center">
         <div className="max-w-screen-lg w-full">
-            <div className="text-2xl text-left pt-20 w-full pl-4">
+            <div className="text-2xl text-left pt-20 w-full pl-4 font-semibold">
                 Create a task
             </div>
 
