@@ -27,6 +27,7 @@ const s3Client = new S3Client({
 });
 
 // Route to get task details
+//  Route to get task details
 router.get("/task", authMiddleware, async(req, res) => {
     // Extract task ID from query parameters
     //@ts-ignore
