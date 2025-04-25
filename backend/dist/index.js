@@ -8,10 +8,12 @@ const express_1 = __importDefault(require("express"));
 const user_1 = __importDefault(require("./routers/user"));
 const worker_1 = __importDefault(require("./routers/worker"));
 const cors_1 = __importDefault(require("cors"));
+const PORT = 3000;
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
 app.use("/v1/user", user_1.default);
 app.use("/v1/worker", worker_1.default);
-app.listen(3000);
-console.log("server is running at port 3000");
+app.listen(PORT, () => {
+    console.log(`Server is running at ${PORT}`);
+});
