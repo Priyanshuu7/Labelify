@@ -11,44 +11,42 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
+const tweetnacl_1 = __importDefault(require("tweetnacl"));
 const client_1 = require("@prisma/client");
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const express_1 = require("express");
 const client_s3_1 = require("@aws-sdk/client-s3");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = require("../config");
 const middleware_1 = require("../middleware");
 const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
 const types_1 = require("../types");
-const config_2 = require("../config");
-// Default title for tasks if noneis provided
+const web3_js_1 = require("@solana/web3.js");
+const connection = new web3_js_1.Connection((_a = process.env.RPC_URL) !== null && _a !== void 0 ? _a : "");
+const PARENT_WALLET_ADDRESS = "GaVXXi5tKTxrPjEqgqMmNNTiRPMN78xgrn7wRGwDdVFw";
 const DEFAULT_TITLE = "Select the most clickable thumbnail";
-// Initialize Prisma Client for database operations
-const prismaClient = new client_1.PrismaClient();
-// Initialize Express Router
-const router = (0, express_1.Router)();
-// Initialize S3 Client for AWS S3 operations
 const s3Client = new client_s3_1.S3Client({
     credentials: {
-        // AWS Access Key ID for S3 client authentication
-        accessKeyId: "AKIASFIXCV457LHHH2UW",
-        // AWS Secret Access Key for S3 client authentication
-        secretAccessKey: "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"
+        accessKeyId: (_b = process.env.ACCESS_KEY_ID) !== null && _b !== void 0 ? _b : "",
+        secretAccessKey: (_c = process.env.ACCESS_SECRET) !== null && _c !== void 0 ? _c : "",
     },
     region: "eu-north-1"
 });
-// Route to get task details
+const router = (0, express_1.Router)();
+const prismaClient = new client_1.PrismaClient();
+prismaClient.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
+    // Code running in a transaction...
+}), {
+    maxWait: 5000, // default: 2000
+    timeout: 10000, // default: 5000
+});
 router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // Extract task ID from query parameters
-    //@ts-ignore
+    // @ts-ignore
     const taskId = req.query.taskId;
-    // Get authenticated user ID from middleware
-    //@ts-ignore
+    // @ts-ignore
     const userId = req.userId;
-    // Fetch task details and associated options from database
-    const taskDetails = yield prismaClient
-        .task
-        .findFirst({
+    const taskDetails = yield prismaClient.task.findFirst({
         where: {
             user_id: Number(userId),
             id: Number(taskId)
@@ -58,15 +56,12 @@ router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0,
         }
     });
     if (!taskDetails) {
-        res
-            .status(411)
-            .json({ message: "You dont have acces to this task" });
-        return;
+        return res.status(411).json({
+            message: "You dont have access to this task"
+        });
     }
-    // Get all submissions for this task with their selected options
-    const responses = yield prismaClient
-        .submission
-        .findMany({
+    // Todo: Can u make this faster?
+    const responses = yield prismaClient.submission.findMany({
         where: {
             task_id: Number(taskId)
         },
@@ -74,115 +69,135 @@ router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0,
             option: true
         }
     });
-    // Initialize result array with option details and zero counts
-    const resultArray = taskDetails
-        .options // 'options' is an array of Option objects from the Task model
-        .map(option => ({
-        optionId: option.id, // Store the option ID
-        count: 0, // Initialize count of votes for this option
-        imageUrl: option.image_url // Store the image URL for display
-    }));
-    // Count submissions for each option
-    responses.forEach((r) => {
-        // Find the matching option in our result array
-        const option = resultArray.find(opt => opt.optionId === r.option_id);
-        if (option) {
-            // Increment the count for this option when it's found
-            option.count++;
-        }
+    const result = {};
+    taskDetails.options.forEach(option => {
+        result[option.id] = {
+            count: 0,
+            option: {
+                imageUrl: option.image_url
+            }
+        };
     });
-    // Return aggregated results showing count for each option
-    res.json({ result: resultArray });
+    responses.forEach(r => {
+        result[r.option_id].count++;
+    });
+    res.json({
+        result,
+        taskDetails
+    });
 }));
-// Route to create a new task
 router.post("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // @ts-ignore
+    var _a, _b, _c, _d, _e, _f;
+    //@ts-ignore
     const userId = req.userId;
+    // validate the inputs from the user;
     const body = req.body;
     const parseData = types_1.createTaskInput.safeParse(body);
+    const user = yield prismaClient.user.findFirst({
+        where: {
+            id: userId
+        }
+    });
     if (!parseData.success) {
-        res
-            .status(411)
-            .json({ message: "Invalid input" });
-        return;
+        return res.status(411).json({
+            message: "You've sent the wrong inputs"
+        });
     }
-    // Create task and options within a transaction
+    const transaction = yield connection.getTransaction(parseData.data.signature, {
+        maxSupportedTransactionVersion: 1
+    });
+    // console.log(transaction); ///////////////////////////////////
+    if (((_b = (_a = transaction === null || transaction === void 0 ? void 0 : transaction.meta) === null || _a === void 0 ? void 0 : _a.postBalances[1]) !== null && _b !== void 0 ? _b : 0) - ((_d = (_c = transaction === null || transaction === void 0 ? void 0 : transaction.meta) === null || _c === void 0 ? void 0 : _c.preBalances[1]) !== null && _d !== void 0 ? _d : 0) !== 100000000) {
+        return res.status(411).json({
+            message: "Transaction signature/amount incorrect"
+        });
+    }
+    if (((_e = transaction === null || transaction === void 0 ? void 0 : transaction.transaction.message.getAccountKeys().get(1)) === null || _e === void 0 ? void 0 : _e.toString()) !== PARENT_WALLET_ADDRESS) {
+        return res.status(411).json({
+            message: "Transaction sent to wrong address"
+        });
+    }
+    if (((_f = transaction === null || transaction === void 0 ? void 0 : transaction.transaction.message.getAccountKeys().get(0)) === null || _f === void 0 ? void 0 : _f.toString()) !== (user === null || user === void 0 ? void 0 : user.address)) {
+        return res.status(411).json({
+            message: "Transaction sent to wrong address"
+        });
+    }
+    // was this money paid by this user address or a different address?
+    // parse the signature here to ensure the person has paid 0.1 SOL
+    // const transaction = Transaction.from(parseData.data.signature);
     let response = yield prismaClient.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        const response = yield tx
-            .task
-            .create({
+        var _a;
+        const response = yield tx.task.create({
             data: {
-                title: parseData.data.title || DEFAULT_TITLE,
-                amount: 1 * config_2.TOTAL_DECIMALS,
+                title: (_a = parseData.data.title) !== null && _a !== void 0 ? _a : DEFAULT_TITLE,
+                amount: 0.1 * config_1.TOTAL_DECIMALS,
+                //TODO: Signature should be unique in the table else people can reuse a signature
                 signature: parseData.data.signature,
                 user_id: userId
             }
         });
-        // create a prisma transction here //
-        yield tx
-            .option
-            .createMany({
-            data: parseData
-                .data
-                .options
-                .map((option) => ({ image_url: option.imageUrl, task_id: response.id }))
+        yield tx.option.createMany({
+            data: parseData.data.options.map(x => ({
+                image_url: x.imageUrl,
+                task_id: response.id
+            }))
         });
         return response;
     }));
-    // Send the created task ID as JSON response
-    res.json({ id: response.id });
+    res.json({
+        id: response.id
+    });
 }));
-// Route to get a presigned URL for S3
 router.get("/presignedUrl", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    //@ts-ignore
+    // @ts-ignore
     const userId = req.userId;
     const { url, fields } = yield (0, s3_presigned_post_1.createPresignedPost)(s3Client, {
-        Bucket: "decentralised-fiverrr",
+        Bucket: 'decentralised-fiverrr',
         Key: `fiver/${userId}/${Math.random()}/image.jpg`,
         Conditions: [
-            [
-                "content-length-range", 0, 5 * 1024 * 1024
-            ], // 5 MB max
+            ['content-length-range', 0, 5 * 1024 * 1024] // 5 MB max
         ],
-        Fields: {
-            "Content-Type": "image/png"
-        },
         Expires: 3600
     });
-    // Send the presigned URL and fields as JSON response
-    res.json({ preSignedUrl: url, fields });
+    res.json({
+        preSignedUrl: url,
+        fields
+    });
 }));
-// Route to sign in a user
 router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const hardcodedWalletAddress = "DZwSAUdxz8goAooy8rBdauQhERToKfGSwGm1PusydS7V";
-    // Check if user already exists
-    const existingUser = yield prismaClient
-        .user
-        .findFirst({
+    const { publicKey, signature } = req.body;
+    const message = new TextEncoder().encode("Sign into mechanical turks");
+    const result = tweetnacl_1.default.sign.detached.verify(message, new Uint8Array(signature.data), new web3_js_1.PublicKey(publicKey).toBytes());
+    if (!result) {
+        return res.status(411).json({
+            message: "Incorrect signature"
+        });
+    }
+    const existingUser = yield prismaClient.user.findFirst({
         where: {
-            address: hardcodedWalletAddress
+            address: publicKey
         }
     });
     if (existingUser) {
-        // Generate JWT token for existing user
         const token = jsonwebtoken_1.default.sign({
             userId: existingUser.id
         }, config_1.JWT_SECRET);
-        res.json({ token });
+        res.json({
+            token
+        });
     }
     else {
-        // Create new user and generate JWT token
-        const user = yield prismaClient
-            .user
-            .create({
+        const user = yield prismaClient.user.create({
             data: {
-                address: hardcodedWalletAddress
+                address: publicKey,
             }
         });
         const token = jsonwebtoken_1.default.sign({
             userId: user.id
         }, config_1.JWT_SECRET);
-        res.json({ token });
+        res.json({
+            token
+        });
     }
 }));
 exports.default = router;

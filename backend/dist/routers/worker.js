@@ -11,195 +11,67 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-// Import necessary modules and dependencies
-const express_1 = require("express");
+const tweetnacl_1 = __importDefault(require("tweetnacl"));
 const client_1 = require("@prisma/client");
+const express_1 = require("express");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const middleware_1 = require("../middleware");
 const config_1 = require("../config");
 const db_1 = require("../db");
 const types_1 = require("../types");
-// import {TOTAL_DECIMALS} from "../config"; import {number} from "zod"; Define
-// a constant for total submissions
+const web3_js_1 = require("@solana/web3.js");
+const bs58_1 = require("bs58");
+const connection = new web3_js_1.Connection((_a = process.env.RPC_URL) !== null && _a !== void 0 ? _a : "");
 const TOTAL_SUBMISSIONS = 100;
-// Initialize Express Router and Prisma Client
-const router = (0, express_1.Router)();
 const prismaClient = new client_1.PrismaClient();
-router.post("/submission", middleware_1.WorkerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    //@ts-ignore
+prismaClient.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
+    // Code running in a transaction...
+}), {
+    maxWait: 5000, // default: 2000
+    timeout: 10000, // default: 5000
+});
+const router = (0, express_1.Router)();
+router.post("/payout", middleware_1.workerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    // @ts-ignore
     const userId = req.userId;
-    const body = req.body;
-    const parsedBody = types_1.createSubmissionInput.safeParse(body);
-    if (!parsedBody.success) {
-        res
-            .status(411)
-            .json({ message: "Incorrect inputs" });
-        return;
-    }
-    // First check if worker exists
-    const worker = yield prismaClient
-        .worker
-        .findUnique({
-        where: {
-            id: Number(userId)
-        }
+    const worker = yield prismaClient.worker.findFirst({
+        where: { id: Number(userId) }
     });
     if (!worker) {
-        res
-            .status(404)
-            .json({ message: "Worker not found" });
-        return;
+        return res.status(403).json({
+            message: "User not found"
+        });
     }
-    const task = yield (0, db_1.getNextTask)(Number(userId));
-    if (!task || task.id !== Number(parsedBody.data.taskId)) {
-        res
-            .status(411)
-            .json({ message: "You already completed this task" });
-        return;
-    }
-    const amount = Number(task.amount) / TOTAL_SUBMISSIONS;
-    const { nextTask } = yield prismaClient.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        const submission = yield tx
-            .submission
-            .create({
-            data: {
-                option_id: Number(parsedBody.data.selection),
-                worker_id: Number(userId), // Ensure userId is a number
-                task_id: Number(parsedBody.data.taskId),
-                amount: amount
-            }
-        });
-        // Update worker's pending amount
-        yield tx
-            .worker
-            .update({
-            where: {
-                id: Number(userId)
-            },
-            data: {
-                pending_amount: {
-                    increment: Number(amount)
-                }
-            }
-        });
-        // Fetch next task inside the transaction to ensure updated data
-        const nextTask = yield tx
-            .task
-            .findFirst({
-            where: {
-                done: false,
-                submissions: {
-                    none: {
-                        worker_id: Number(userId)
-                    }
-                }
-            },
-            select: {
-                id: true,
-                amount: true,
-                title: true,
-                options: true
-            }
-        });
-        return { submission, nextTask };
+    const transaction = new web3_js_1.Transaction().add(web3_js_1.SystemProgram.transfer({
+        fromPubkey: new web3_js_1.PublicKey("GaVXXi5tKTxrPjEqgqMmNNTiRPMN78xgrn7wRGwDdVFw"),
+        toPubkey: new web3_js_1.PublicKey(worker.address),
+        lamports: 1000000000 * worker.pending_amount / config_1.TOTAL_DECIMALS,
     }));
-    res.json({ nextTask, amount });
-    return;
-}));
-// Route to get the next task for the worker
-router.get("/nextTask", middleware_1.WorkerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    //@ts-ignore
-    const userId = req.userId; // Extract user ID from request
-    const task = yield (0, db_1.getNextTask)(Number(userId)); // Fetch the next task for the user
-    if (!task) {
-        // If no task is available
-        res
-            .status(411)
-            .json({
-            message: "No more task is you to review", // Respond with message indicating no tasks
+    console.log(worker.address);
+    console.log(connection);
+    console.log(transaction);
+    console.log(web3_js_1.Keypair);
+    const keypair = web3_js_1.Keypair.fromSecretKey((0, bs58_1.decode)((_a = process.env.PRIVATE_KEY) !== null && _a !== void 0 ? _a : ""));
+    // TODO: There's a double spending problem here
+    // The user can request the withdrawal multiple times
+    // Can u figure out a way to fix it?
+    let signature = "";
+    try {
+        signature = yield (0, web3_js_1.sendAndConfirmTransaction)(connection, transaction, [keypair]);
+    }
+    catch (e) {
+        return res.json({
+            message: "Transaction failed"
         });
     }
-    else {
-        // If a task is available
-        res
-            .status(411)
-            .json({
-            task, // Respond with the task details
-        });
-    }
-}));
-// Route to handle worker sign-in
-router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const hardcodedWalletAddress = "DZwSAUdxz8goAooy8rBdauQhERToKfGSwGm1PusydS7V"; // Hardcoded wallet address for demonstration
-    // Check if a worker with the hardcoded address already exists
-    const existingUser = yield prismaClient
-        .worker
-        .findFirst({
-        where: {
-            address: hardcodedWalletAddress
-        }
-    });
-    if (existingUser) {
-        // If user exists, generate a JWT token
-        const token = jsonwebtoken_1.default.sign({
-            userId: existingUser.id
-        }, config_1.WORKER_JWT_SECRET);
-        res.json({ token }); // Respond with the token
-    }
-    else {
-        // If user does not exist, create a new worker
-        const user = yield prismaClient
-            .worker
-            .create({
-            data: {
-                address: hardcodedWalletAddress,
-                pending_amount: 0,
-                locked_amount: 0
-            }
-        });
-        // Generate a JWT token for the new user
-        const token = jsonwebtoken_1.default.sign({
-            userId: user.id
-        }, config_1.WORKER_JWT_SECRET);
-        res.json({ token }); // Respond with the token
-    }
-}));
-router.get("/balance", middleware_1.WorkerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.userId;
-    const worker = yield prismaClient
-        .worker
-        .findFirst({
-        where: {
-            id: Number(userId)
-        }
-    });
-    res.json({
-        PendingAmount: worker === null || worker === void 0 ? void 0 : worker.pending_amount,
-        LockedAmount: worker === null || worker === void 0 ? void 0 : worker.locked_amount
-    });
-}));
-router.post("/payout", middleware_1.WorkerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.userId;
-    const worker = yield prismaClient
-        .worker
-        .findFirst({
-        where: {
-            id: Number(userId)
-        }
-    });
-    if (!worker) {
-        res
-            .status(403)
-            .json({ "messaage": "user not found" });
-        return;
-    }
-    const address = worker.address;
-    const txnId = "0x12334";
+    console.log(keypair);
+    console.log(signature); ///////////////////////////
+    // We should add a lock here
     yield prismaClient.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        yield tx
-            .worker
-            .update({
+        yield tx.worker.update({
             where: {
                 id: Number(userId)
             },
@@ -212,19 +84,132 @@ router.post("/payout", middleware_1.WorkerMiddleware, (req, res) => __awaiter(vo
                 }
             }
         });
-        yield tx
-            .payouts
-            .create({
+        yield tx.payouts.create({
             data: {
-                user_id: Number(userId),
+                worker_id: Number(userId),
                 amount: worker.pending_amount,
                 status: "Processing",
-                signature: txnId
+                signature: signature
             }
         });
     }));
-    res.json({ "Message": "Processing Payouts", amount: worker.pending_amount });
+    res.json({
+        message: "Processing payout",
+        amount: worker.pending_amount
+    });
 }));
-console.log(config_1.WORKER_JWT_SECRET);
-// Export the router for use in other parts of the application
+router.get("/balance", middleware_1.workerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const userId = req.userId;
+    const worker = yield prismaClient.worker.findFirst({
+        where: {
+            id: Number(userId)
+        }
+    });
+    res.json({
+        pendingAmount: worker === null || worker === void 0 ? void 0 : worker.pending_amount,
+        lockedAmount: worker === null || worker === void 0 ? void 0 : worker.pending_amount,
+    });
+}));
+router.post("/submission", middleware_1.workerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const userId = req.userId;
+    const body = req.body;
+    const parsedBody = types_1.createSubmissionInput.safeParse(body);
+    if (parsedBody.success) {
+        const task = yield (0, db_1.getNextTask)(Number(userId));
+        if (!task || (task === null || task === void 0 ? void 0 : task.id) !== Number(parsedBody.data.taskId)) {
+            return res.status(411).json({
+                message: "Incorrect task id"
+            });
+        }
+        const amount = (Number(task.amount) / TOTAL_SUBMISSIONS).toString();
+        yield prismaClient.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+            const submission = yield tx.submission.create({
+                data: {
+                    option_id: Number(parsedBody.data.selection),
+                    worker_id: userId,
+                    task_id: Number(parsedBody.data.taskId),
+                    amount: Number(amount)
+                }
+            });
+            yield tx.worker.update({
+                where: {
+                    id: userId,
+                },
+                data: {
+                    pending_amount: {
+                        increment: Number(amount)
+                    }
+                }
+            });
+            return submission;
+        }));
+        const nextTask = yield (0, db_1.getNextTask)(Number(userId));
+        res.json({
+            nextTask,
+            amount
+        });
+    }
+    else {
+        res.status(411).json({
+            message: "Incorrect inputs"
+        });
+    }
+}));
+router.get("/nextTask", middleware_1.workerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const userId = req.userId;
+    const task = yield (0, db_1.getNextTask)(Number(userId));
+    if (!task) {
+        res.status(411).json({
+            message: "No more tasks left for you to review"
+        });
+    }
+    else {
+        res.json({
+            task
+        });
+    }
+}));
+router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { publicKey, signature } = req.body;
+    const message = new TextEncoder().encode("Sign into mechanical turks as a worker");
+    const result = tweetnacl_1.default.sign.detached.verify(message, new Uint8Array(signature.data), new web3_js_1.PublicKey(publicKey).toBytes());
+    if (!result) {
+        return res.status(411).json({
+            message: "Incorrect signature"
+        });
+    }
+    const existingUser = yield prismaClient.worker.findFirst({
+        where: {
+            address: publicKey
+        }
+    });
+    if (existingUser) {
+        const token = jsonwebtoken_1.default.sign({
+            userId: existingUser.id
+        }, config_1.WORKER_JWT_SECRET);
+        res.json({
+            token,
+            amount: existingUser.pending_amount / config_1.TOTAL_DECIMALS
+        });
+    }
+    else {
+        const user = yield prismaClient.worker.create({
+            data: {
+                address: publicKey,
+                pending_amount: 0,
+                locked_amount: 0
+            }
+        });
+        const token = jsonwebtoken_1.default.sign({
+            userId: user.id
+        }, config_1.WORKER_JWT_SECRET);
+        res.json({
+            token,
+            amount: 0
+        });
+    }
+}));
 exports.default = router;
