@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   const network = WalletAdapterNetwork.Devnet;
 
-  // You can also provide a custom RPC endpoint.
+  
   const endpoint = process.env.NEXT_PUBLIC_RPC_URL || clusterApiUrl(network);
 
   const wallets = useMemo(
