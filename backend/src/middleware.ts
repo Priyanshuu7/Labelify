@@ -7,7 +7,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
 
     try {
         const decoded = jwt.verify(authHeader, JWT_SECRET);
-        // console.log(decoded); ///////////////////////////
+        // console.log(decoded); 
         // @ts-ignore
         if (decoded.userId) {
             // @ts-ignore
