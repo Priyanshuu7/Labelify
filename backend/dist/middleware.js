@@ -12,7 +12,7 @@ function authMiddleware(req, res, next) {
     const authHeader = (_a = req.headers["authorization"]) !== null && _a !== void 0 ? _a : "";
     try {
         const decoded = jsonwebtoken_1.default.verify(authHeader, config_1.JWT_SECRET);
-        // console.log(decoded); ///////////////////////////
+        // console.log(decoded); 
         // @ts-ignore
         if (decoded.userId) {
             // @ts-ignore
