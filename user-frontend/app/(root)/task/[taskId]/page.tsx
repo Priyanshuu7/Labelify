@@ -13,6 +13,7 @@ async function getTaskDetails(taskId: string) {
     return response.data
 }
 
+// page fun //
 export default function Page({params: { 
     taskId 
 }}: {params: { taskId: string }}) {
