@@ -4,8 +4,8 @@
 
 ## 🌐 Live URLs
 
-- **User Frontend**: [labelify-wine.vercel.app](https://labelify-wine.vercel.app)
-- **Worker Frontend**: [labelify-worker.vercel.app](https://labelify-worker.vercel.app)
+- **User Frontend**: [labelify-wine.vercel.app](https://labelify-wine.vercel.app/)
+- **Worker Frontend**: [labelify-worker.vercel.app](https://labelifyworker.vercel.app/)
 
 ## 🗂️ Project Structure
 
@@ -18,21 +18,19 @@ Labelify/
 
 ## 🛠️ Tech Stack
 
-- Frontend: React.js, TypeScript, Tailwind CSS  
+- Frontend: Next.js, TypeScript, Tailwind CSS  
 - Backend: Node.js, Express.js  
 - Database: PostgreSQL (via Neon)  
 - Blockchain: Solana RPC (QuickNode)  
 - Cloud Storage: AWS S3 (Pre-signed URLs)  
 - Authentication: JWT-based  
-- Deployment: Vercel (frontend), custom backend hosting
+- Deployment: Vercel (frontend), Render (backend) 
 
 ## ⚙️ Environment Variables
 
 Create a `.env` file in the `backend/` directory with the following variables:
 
 ```
-PORT=5000
-
 # PostgreSQL DB (via Neon)
 DATABASE_URL=your_postgresql_connection_string
 
@@ -90,7 +88,7 @@ npm install
 ```bash
 # Start backend
 cd backend
-npm start
+npm run dev
 
 # Start user frontend
 cd ../user-frontend
@@ -101,9 +99,9 @@ cd ../worker-frontend
 npm run dev
 ```
 
-- User App: http://localhost:3000  
-- Worker App: http://localhost:3001  
-- Backend API: http://localhost:5000
+- User App: http://localhost:3001  
+- Worker App: http://localhost:3002  
+- Backend API: http://localhost:3000
 
 ## 🎯 Features
 
@@ -112,7 +110,7 @@ npm run dev
 - 👷 Workers can label images from dedicated UI  
 - 🔗 Blockchain-integrated activity logging (Solana)  
 - ☁️ File storage via AWS S3 with pre-signed URLs  
-- 📊 Real-time progress tracking for each project
+- 📊 Real-time progress tracking for each task
 
 ## 🧪 Testing
 
