@@ -49,7 +49,7 @@ WORKER_JWT_SECRET=your_worker_jwt_secret
 PRIVATE_KEY=your_solana_wallet_private_key
 ```
 
-Create a `.env` file in the `user-frontend/ & worker-frontend` directory with the following variables:
+Create a `.env` file in the `user-frontend/ & worker-frontend/` directory with the following variables:
 ```
 # Solana RPC
 RPC_URL=your_solana_rpc_url
