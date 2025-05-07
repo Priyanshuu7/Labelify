@@ -6,6 +6,7 @@ import {
     WalletModalProvider
 } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl } from '@solana/web3.js';
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 require('@solana/wallet-adapter-react-ui/styles.css');
 
