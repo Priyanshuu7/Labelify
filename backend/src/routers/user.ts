@@ -145,7 +145,7 @@ router.post("/task", authMiddleware, async (req, res) => {
 
     // parse the signature here to ensure the person has paid 0.1 SOL
     // const transaction = Transaction.from(parseData.data.signature);
-        // const transaction = Transaction.from(parseData.data.signature);
+    // const transaction = Transaction.from(parseData.data.signature);
 
 
     let response = await prismaClient.$transaction(async tx => {

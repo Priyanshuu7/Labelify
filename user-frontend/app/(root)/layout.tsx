@@ -19,9 +19,11 @@ export default function RootLayout({
   
   const endpoint = process.env.NEXT_PUBLIC_RPC_URL || clusterApiUrl(network);
 
+
+// idr big bracket me network ayega //
   const wallets = useMemo(
       () => [],
-      [network]
+      []
   );
 
     return (
