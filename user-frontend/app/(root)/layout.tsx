@@ -32,6 +32,7 @@ export default function RootLayout({
         <WalletProvider wallets={wallets} autoConnect>
             <WalletModalProvider>
                 {children}
+                <SpeedInsights />
             </WalletModalProvider>
         </WalletProvider>
     </ConnectionProvider>
