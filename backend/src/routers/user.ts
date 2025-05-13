@@ -122,7 +122,6 @@ router.post("/task", authMiddleware, async (req, res) => {
     });
 
     // console.log(transaction); ///////////////////////////////////
-
     // if ((transaction?.meta?.postBalances[1] ?? 0) - (transaction?.meta?.preBalances[1] ?? 0) !== 100000000) {
     //     return res.status(411).json({
     //         message: "Transaction signature/amount incorrect"
@@ -140,8 +139,8 @@ router.post("/task", authMiddleware, async (req, res) => {
     //         message: "Transaction sent to wrong address"
     //     })
     // }
-    // was this money paid by this user address or a different address?
 
+    // was this money paid by this user address or a different address?
     // parse the signature here to ensure the person has paid 0.1 SOL
     // const transaction = Transaction.from(parseData.data.signature);
     // const transaction = Transaction.from(parseData.data.signature);

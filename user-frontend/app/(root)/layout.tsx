@@ -22,7 +22,6 @@ export default function RootLayout({
 
 
 // idr big bracket me network ayega //
-// idr big bracket me network ayega //
 
   const wallets = useMemo(
       () => [],
