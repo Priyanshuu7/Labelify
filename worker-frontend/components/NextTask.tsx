@@ -36,7 +36,7 @@ export const NextTask = () => {
                 setCurrentTask(null)
             })
     }, [])
-    
+
     if (loading) {
         return <div className="h-screen flex justify-center flex-col">
             <div className="w-full flex justify-center text-2xl">
@@ -48,7 +48,7 @@ export const NextTask = () => {
     if (!currentTask) {
         return <div className="h-screen flex justify-center flex-col">
             <div className="w-full flex justify-center text-2xl">
-                Please check back in some time, there are no pending tasks at the momenet 
+                Please check back in some time, there are no pending tasks at the momenet
             </div>
         </div>
     }
@@ -72,7 +72,7 @@ export const NextTask = () => {
                             "Authorization": localStorage.getItem("token")
                         }
                     });
-    
+
                     const nextTask = response.data.nextTask;
                     if (nextTask) {
                         setCurrentTask(nextTask)
@@ -80,7 +80,7 @@ export const NextTask = () => {
                         setCurrentTask(null);
                     }
                     // refresh the user balance in the appbar
-                } catch(e) {
+                } catch (e) {
                     console.log(e);
                 }
                 setSubmitting(false);
@@ -90,7 +90,7 @@ export const NextTask = () => {
     </div>
 }
 
-function Option({imageUrl, onSelect}: {
+function Option({ imageUrl, onSelect }: {
     imageUrl: string;
     onSelect: () => void;
 }) {
